@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galería Interactiva</title>
+    <style>
+        /* Reset y configuración base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Controles */
+        .controls {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .url-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            min-width: 300px;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Contenedor de galería */
+        .gallery-container {
+            flex: 1;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        /* Galería */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            min-height: 200px;
+        }
+
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+            border: 3px solid transparent;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .gallery-item.selected {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+
+        /* Mensaje vacío */
+        .empty-message {
+            text-align: center;
+            color: #666;
+            padding: 60px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .empty-message p {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .empty-message p:first-child {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .gallery:not(:empty) + .empty-message {
+            display: none;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: white;
+            opacity: 0.8;
+        }
+
+        /* Notificaciones */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+        }
+
+        .notification.success { background-color: #4CAF50; }
+        .notification.error { background-color: #ff6b6b; }
+        .notification.warning { background-color: #ff9800; }
+        .notification.show { transform: translateX(0); }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .header h1 { font-size: 2rem; }
+            .input-group { flex-direction: column; }
+            .url-input { min-width: auto; }
+            .gallery { 
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .gallery { grid-template-columns: 1fr; }
+            .header h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🖼️ Galería Interactiva</h1>
+            <p>Agrega, selecciona y elimina imágenes dinámicamente</p>
+        </header>
+
+        <div class="controls">
+            <div class="input-group">
+                <input 
+                    type="url" 
+                    id="imageUrlInput" 
+                    placeholder="Ingresa la URL de una imagen..."
+                    class="url-input"
+                >
+                <button id="addImageBtn" class="btn btn-primary">
+                    ➕ Agregar Imagen
+                </button>
+            </div>
+            
+            <button id="deleteImageBtn" class="btn btn-danger" disabled>
+                🗑️ Eliminar Imagen Seleccionada
+            </button>
+        </div>
+
+        <div class="gallery-container">
+            <div id="gallery" class="gallery">
+                <!-- Las imágenes se agregan dinámicamente aquí -->
+            </div>
+            <div id="emptyMessage" class="empty-message">
+                <p>🎨</p>
+                <p>No hay imágenes en la galería</p>
+                <p>Agrega tu primera imagen usando el campo de arriba</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>💻 Desarrollado con JavaScript vanilla y ❤️</p>
+    </footer>
+
+    <script>
+        // Variables globales
+        let selectedImage = null;
+        let imageCounter = 0;
+
+        // Elementos del DOM
+        const imageUrlInput = document.getElementById('imageUrlInput');
+        const addImageBtn = document.getElementById('addImageBtn');
+        const deleteImageBtn = document.getElementById('deleteImageBtn');
+        const gallery = document.getElementById('gallery');
+
+        // Función para inicializar la aplicación
+        function initializeApp() {
+            // Event listeners
+            addImageBtn.addEventListener('click', addImage);
+            deleteImageBtn.addEventListener('click', deleteSelectedImage);
+            imageUrlInput.addEventListener('input', validateInput);
+            imageUrlInput.addEventListener('keydown', handleKeyPress);
+            
+            // Cargar imágenes de ejemplo
+            loadSampleImages();
+            
+            console.log('✅ Galería interactiva inicializada correctamente');
+        }
+
+        // Función para manejar teclas del teclado
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                addImage();
+            }
+        }
+
+        // Función para validar la entrada del usuario
+        function validateInput() {
+            const url = imageUrlInput.value.trim();
+            const isValid = url && isValidImageUrl(url);
+            addImageBtn.disabled = !isValid;
+        }
+
+        // Función para validar si es una URL de imagen válida
+        function isValidImageUrl(url) {
+            try {
+                const urlObj = new URL(url);
+                const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
+                const pathname = urlObj.pathname.toLowerCase();
+                
+                return imageExtensions.some(ext => pathname.endsWith(ext)) || 
+                       url.includes('unsplash.com') || 
+                       url.includes('imgur.com') ||
+                       url.includes('pixabay.com') ||
+                       url.includes('pexels.com');
+            } catch {
+                return false;
+            }
+        }
+
+        // Función para agregar una nueva imagen
+        function addImage() {
+            const url = imageUrlInput.value.trim();
+            
+            if (!url) {
+                showNotification('⚠️ Por favor ingresa una URL de imagen', 'warning');
+                return;
+            }
+            
+            if (!isValidImageUrl(url)) {
+                showNotification('❌ Por favor ingresa una URL de imagen válida', 'error');
+                return;
+            }
+            
+            // Verificar si la imagen ya existe
+            const existingImages = Array.from(gallery.querySelectorAll('img'));
+            if (existingImages.some(img => img.src === url)) {
+                showNotification('⚠️ Esta imagen ya existe en la galería', 'warning');
+                return;
+            }
+            
+            createImageElement(url);
+            imageUrlInput.value = '';
+            addImageBtn.disabled = true;
+            
+            showNotification('✅ Imagen agregada exitosamente', 'success');
+        }
+
+        // Función para crear un elemento de imagen
+        function createImageElement(url) {
+            const imageContainer = document.createElement('div');
+            imageContainer.className = 'gallery-item';
+            imageContainer.dataset.id = ++imageCounter;
+            
+            const img = document.createElement('img');
+            img.src = url;
+            img.alt = `Imagen ${imageCounter}`;
+            img.loading = 'lazy';
+            
+            // Manejar errores de carga
+            img.addEventListener('error', function() {
+                showNotification('❌ Error al cargar la imagen', 'error');
+                imageContainer.remove();
+            });
+            
+            // Event listener para seleccionar imagen
+            imageContainer.addEventListener('click', function() {
+                selectImage(imageContainer);
+            });
+            
+            imageContainer.appendChild(img);
+            gallery.appendChild(imageContainer);
+        }
+
+        // Función para seleccionar una imagen
+        function selectImage(imageElement) {
+            // Deseleccionar imagen anterior
+            if (selectedImage) {
+                selectedImage.classList.remove('selected');
+            }
+            
+            // Seleccionar nueva imagen
+            selectedImage = imageElement;
+            selectedImage.classList.add('selected');
+            
+            // Habilitar botón de eliminar
+            deleteImageBtn.disabled = false;
+            
+            console.log(`🖼️ Imagen ${imageElement.dataset.id} seleccionada`);
+        }
+
+        // Función para eliminar la imagen seleccionada
+        function deleteSelectedImage() {
+            if (!selectedImage) {
+                showNotification('⚠️ No hay ninguna imagen seleccionada', 'warning');
+                return;
+            }
+            
+            const imageId = selectedImage.dataset.id;
+            selectedImage.remove();
+            selectedImage = null;
+            deleteImageBtn.disabled = true;
+            
+            showNotification('🗑️ Imagen eliminada correctamente', 'success');
+            console.log(`🗑️ Imagen ${imageId} eliminada`);
+        }
+
+        // Función para mostrar notificaciones
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Mostrar notificación
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            // Ocultar y eliminar notificación
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // Función para cargar imágenes de ejemplo
+        function loadSampleImages() {
+            const sampleImages = [
+                'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
+                'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400',
+                'https://images.unsplash.com/photo-1493770348161-369560ae357d?w=400'
+            ];
+            
+            sampleImages.forEach((url, index) => {
+                setTimeout(() => {
+                    createImageElement(url);
+                }, index * 200);
+            });
+        }
+
+        // Event listener para detectar teclas globales
+        document.addEventListener('keydown', function(event) {
+            if ((event.key === 'Delete' || event.key === 'Backspace') && 
+                selectedImage && 
+                event.target.tagName !== 'INPUT') {
+                event.preventDefault();
+                deleteSelectedImage();
+            }
+            
+            if (event.key === 'Escape' && selectedImage) {
+                selectedImage.classList.remove('selected');
+                selectedImage = null;
+                deleteImageBtn.disabled = true;
+                showNotification('↪️ Imagen deseleccionada', 'info');
+            }
+        });
+
+        // Inicializar la aplicación cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>
